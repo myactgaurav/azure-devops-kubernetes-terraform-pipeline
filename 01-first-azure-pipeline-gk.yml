@@ -9,28 +9,32 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 
-<<<<<<< HEAD
-steps:
-- script: echo Hello, world changed second gtime  !
-  displayName: 'Run a one-line script'
-=======
-# Pipeline > Stages > Jobs > Tasks 
->>>>>>> 4c2fc31fbcea38818c27b5af22c87d88fb3d866c
+# Pipelines > Stages > Jobs > Tasks(Steps)
 
 jobs:
-- job: job1
+- job: Job1
   steps:
-  - script: echo Job 1 Hello, world changed !
+  - script: echo Job1 - Hello, world, changed second time!
     displayName: 'Run a one-line script'
-
   - script: |
       echo Add other tasks to build, test, and deploy your project.
       echo See https://aka.ms/yaml
       echo more information
     displayName: 'Run a multi-line script'
-
-
-- job: job2
+- job: Job2
+  dependsOn: Job1
   steps:
-  - script: echo Job 2  !
+  - script: echo Job2!
+    displayName: 'Run a one-line script'
+- job: Job3
+  dependsOn: Job1
+  steps:
+  - script: echo Job3!
+    displayName: 'Run a one-line script'
+- job: Job4
+  dependsOn: 
+  - Job2
+  - Job3
+  steps:
+  - script: echo Job3!
     displayName: 'Run a one-line script'
