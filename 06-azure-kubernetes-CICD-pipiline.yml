@@ -1,0 +1,73 @@
+
+trigger:
+- master
+
+resources:
+- repo: self
+
+variables:
+  tag: 25
+#'$(Build.BuildId)'
+
+stages:
+
+# Stage 1 
+# Build Docker Image 
+# Get K8S configuration files
+- stage: Build
+  displayName: Build image
+  jobs:  
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    # - task: Docker@2
+    #   inputs:
+    #     containerRegistry: 'myactgaurav-docker-hub'
+    #     repository: 'myactgaurav/currency-exchange-devops'
+    #     command: 'buildAndPush'
+    #     Dockerfile: '**/Dockerfile'
+    #     tags: '$(tag)'
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: '$(System.DefaultWorkingDirectory)'
+        Contents: '**/*.yaml'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'manifests'
+        publishLocation: 'Container'
+
+- stage: Deploy
+# Stage 2 
+# Download K8S files 
+# Deploy K8S cluster 
+
+  displayName: Deploy image
+  jobs:  
+  - job: Deploy
+    displayName: Deploy
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'manifests'
+        itemPattern: '**/*.yaml'
+        downloadPath: '$(System.ArtifactsDirectory)'
+    - task: KubernetesManifest@0
+      inputs:
+        action: 'deploy'
+        kubernetesServiceConnection: 'azure-kubernetes-connection'
+        namespace: 'default'
+        manifests: '$(System.ArtifactsDirectory)/configuration/kubernetes/deployment.yaml'
+        containers: 'myactgaurav/currency-exchange-devops:$(tag)'
+
+
+
+
